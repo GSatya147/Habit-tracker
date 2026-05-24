@@ -31,9 +31,7 @@ const MONTHS = ['January','February','March','April','May','June',
                 'July','August','September','October','November','December'];
 const DAYS   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 
-// Row height used in BOTH the habits table and analysis panel — keeps them aligned
 const ROW_H   = 38;
-// Total thead height (week row 26 + day row 32) — matches analysis panel header
 const THEAD_H = 58;
 
 const DEFAULTS = [
@@ -54,6 +52,17 @@ const db = {
     try { localStorage.setItem(key, JSON.stringify(val)); }
     catch(e) { console.warn('storage write failed', key, e); }
   },
+};
+
+// ── Responsive hook ───────────────────────────────────────────────
+const useIsMobile = () => {
+  const [mobile, setMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth < 768);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  return mobile;
 };
 
 // ── Calendar utils ────────────────────────────────────────────────
@@ -103,13 +112,14 @@ function ProgBar({ pct }) {
 // ── Main ──────────────────────────────────────────────────────────
 export default function HabitTracker() {
   const now = new Date();
+  const isMobile = useIsMobile();
+
   const [year,   setYear]   = useState(now.getFullYear());
   const [month,  setMonth]  = useState(now.getMonth());
   const [habits, setHabits] = useState([]);
   const [checks, setChecks] = useState({});
   const [ready,  setReady]  = useState(false);
 
-  // Modal: null | 'add' | habitObj
   const [modal,         setModal]         = useState(null);
   const [mName,         setMName]         = useState('');
   const [mEmoji,        setMEmoji]        = useState('✅');
@@ -126,7 +136,6 @@ export default function HabitTracker() {
     })();
   }, []);
 
-  // ── Load checks when month changes ────────────────────────────
   useEffect(() => {
     if (!ready) return;
     (async () => {
@@ -135,11 +144,9 @@ export default function HabitTracker() {
     })();
   }, [year, month, ready]);
 
-  // ── Persist ───────────────────────────────────────────────────
   useEffect(() => { if (ready) db.set('habits', habits); }, [habits, ready]);
   useEffect(() => { if (ready) db.set('settings', { year, month }); }, [year, month, ready]);
 
-  // ── Toggle checkbox ───────────────────────────────────────────
   const toggle = useCallback((hid, day) => {
     setChecks(prev => {
       const key  = `${hid}-${day}`;
@@ -149,12 +156,10 @@ export default function HabitTracker() {
     });
   }, [year, month]);
 
-  // ── Calendar ──────────────────────────────────────────────────
   const weeks     = buildWeeks(year, month);
   const totalDays = daysInMonth(year, month);
   const isToday   = (d) => now.getFullYear() === year && now.getMonth() === month && now.getDate() === d;
 
-  // ── Stats ─────────────────────────────────────────────────────
   const stats = habits.map(h => {
     let done = 0;
     for (let d = 1; d <= totalDays; d++) if (checks[`${h.id}-${d}`]) done++;
@@ -178,7 +183,6 @@ export default function HabitTracker() {
     return { label: `W${i + 1}`, pct: total > 0 ? Math.round(done / total * 100) : 0 };
   });
 
-  // ── CRUD ──────────────────────────────────────────────────────
   const openAdd  = () => { setMName(''); setMEmoji('✅'); setModal('add'); setPendingDelete(null); };
   const openEdit = (h) => { setMName(h.name); setMEmoji(h.emoji); setModal(h); setPendingDelete(null); };
   const closeModal = () => setModal(null);
@@ -209,7 +213,6 @@ export default function HabitTracker() {
     color:C.text, fontSize:11, fontFamily:C.mono, padding:'4px 10px',
   };
 
-  // ── Loading screen ────────────────────────────────────────────
   if (!ready) return (
     <div style={{background:C.bg,minHeight:'100vh',display:'flex',alignItems:'center',
       justifyContent:'center',fontFamily:C.body,color:C.muted}}>
@@ -221,21 +224,33 @@ export default function HabitTracker() {
     </div>
   );
 
-  // ── Helpers for sticky cells ──────────────────────────────────
   const thSticky = (extraH, bg = C.s1) => ({
     position:'sticky', left:0, zIndex:4, background:bg,
     width:240, minWidth:240, height:extraH,
   });
 
   return (
-    <div style={{fontFamily:C.body,background:C.bg,minHeight:'100vh',color:C.text,padding:16}}>
+    <div style={{fontFamily:C.body,background:C.bg,minHeight:'100vh',color:C.text,padding:isMobile?10:16}}>
       <Fonts/>
 
       {/* ════ TOP ROW ════════════════════════════════════════════ */}
-      <div style={{display:'flex',gap:10,marginBottom:10,alignItems:'stretch'}}>
+      <div style={{
+        display:'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap:10,
+        marginBottom:10,
+        alignItems:'stretch',
+      }}>
 
-        {/* Title + Settings */}
-        <div style={{display:'flex',flexDirection:'column',gap:8,flexShrink:0,width:178}}>
+        {/* Title + Settings — on mobile: row with two columns */}
+        <div style={{
+          display:'flex',
+          flexDirection: isMobile ? 'row' : 'column',
+          gap:8,
+          flexShrink:0,
+          width: isMobile ? '100%' : 178,
+        }}>
+          {/* Title card */}
           <div style={{background:C.s1,border:`1px solid ${C.bd}`,borderTop:`2px solid ${C.acc}`,
             borderRadius:8,padding:'14px 12px',textAlign:'center',flex:1,
             display:'flex',flexDirection:'column',justifyContent:'center',gap:3}}>
@@ -246,215 +261,253 @@ export default function HabitTracker() {
             <div style={{fontFamily:C.mono,fontSize:11,color:C.lo,marginTop:2}}>{year}</div>
           </div>
 
-          <div style={{background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8,padding:'10px 12px'}}>
-            <div style={{fontSize:8,letterSpacing:2.5,color:C.lo,marginBottom:8,fontFamily:C.mono}}>CALENDAR SETTINGS</div>
-            {[
-              { label:'YEAR',  val:year,  fn:v=>setYear(Number(v)),  opts:years.map(y=>({v:y,l:String(y)})) },
-              { label:'MONTH', val:month, fn:v=>setMonth(Number(v)), opts:MONTHS.map((m,i)=>({v:i,l:m.slice(0,3).toUpperCase()})) },
-            ].map(({label,val,fn,opts}) => (
-              <div key={label} style={{display:'flex',alignItems:'center',gap:6,marginBottom:5}}>
-                <span style={{fontSize:9,color:C.lo,width:40,letterSpacing:1,flexShrink:0,fontFamily:C.mono}}>{label}</span>
-                <select value={val} onChange={e=>fn(e.target.value)}
-                  style={{background:C.s2,color:C.text,border:`1px solid ${C.bd}`,borderRadius:4,
-                    padding:'3px 6px',fontSize:11,fontFamily:C.mono,cursor:'pointer',flex:1}}>
-                  {opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
-                </select>
-              </div>
-            ))}
+          {/* Settings + Add button */}
+          <div style={{display:'flex',flexDirection:'column',gap:8,flex: isMobile ? 1 : undefined}}>
+            <div style={{background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8,padding:'10px 12px'}}>
+              <div style={{fontSize:8,letterSpacing:2.5,color:C.lo,marginBottom:8,fontFamily:C.mono}}>CALENDAR SETTINGS</div>
+              {[
+                { label:'YEAR',  val:year,  fn:v=>setYear(Number(v)),  opts:years.map(y=>({v:y,l:String(y)})) },
+                { label:'MONTH', val:month, fn:v=>setMonth(Number(v)), opts:MONTHS.map((m,i)=>({v:i,l:m.slice(0,3).toUpperCase()})) },
+              ].map(({label,val,fn,opts}) => (
+                <div key={label} style={{display:'flex',alignItems:'center',gap:6,marginBottom:5}}>
+                  <span style={{fontSize:9,color:C.lo,width:40,letterSpacing:1,flexShrink:0,fontFamily:C.mono}}>{label}</span>
+                  <select value={val} onChange={e=>fn(e.target.value)}
+                    style={{background:C.s2,color:C.text,border:`1px solid ${C.bd}`,borderRadius:4,
+                      padding:'3px 6px',fontSize:11,fontFamily:C.mono,cursor:'pointer',flex:1}}>
+                    {opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={openAdd}
+              style={{background:C.acc,color:C.bg,border:'none',borderRadius:8,padding:'9px 0',
+                cursor:'pointer',fontWeight:700,fontSize:11,letterSpacing:2,fontFamily:C.body}}>
+              + ADD HABIT
+            </button>
+          </div>
+        </div>
+
+        {/* Charts row — on mobile: stack vertically */}
+        <div style={{
+          display:'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap:10,
+          flex:1,
+          minWidth:0,
+        }}>
+          {/* Daily Progress */}
+          <div style={{background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8,padding:'10px 10px 6px',flex:2,minWidth:0}}>
+            <div style={{fontSize:8,letterSpacing:3,color:C.muted,marginBottom:6,fontFamily:C.mono}}>DAILY PROGRESS</div>
+            <div style={{width:'100%',height:132}}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dailyData} margin={{top:0,right:2,bottom:0,left:-32}} barCategoryGap="12%">
+                  <XAxis dataKey="label" tick={{fill:C.lo,fontSize:8,fontFamily:C.mono}}
+                    interval={Math.max(0,Math.floor(totalDays/8)-1)}/>
+                  <YAxis tick={{fill:C.lo,fontSize:8,fontFamily:C.mono}} domain={[0,100]}
+                    tickFormatter={v=>`${v}%`} tickCount={3}/>
+                  <Tooltip formatter={v=>[`${v}%`,'Done']} contentStyle={tt} cursor={{fill:C.accD}}/>
+                  <Bar dataKey="pct" fill={C.acc} radius={[2,2,0,0]} maxBarSize={13}/>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          <button onClick={openAdd}
-            style={{background:C.acc,color:C.bg,border:'none',borderRadius:8,padding:'9px 0',
-              cursor:'pointer',fontWeight:700,fontSize:11,letterSpacing:2,fontFamily:C.body}}>
-            + ADD HABIT
-          </button>
-        </div>
-
-        {/* Daily Progress */}
-        <div style={{background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8,padding:'10px 10px 6px',flex:2,minWidth:0}}>
-          <div style={{fontSize:8,letterSpacing:3,color:C.muted,marginBottom:6,fontFamily:C.mono}}>DAILY PROGRESS</div>
-          <ResponsiveContainer width="100%" height={132}>
-            <BarChart data={dailyData} margin={{top:0,right:2,bottom:0,left:-32}} barCategoryGap="12%">
-              <XAxis dataKey="label" tick={{fill:C.lo,fontSize:8,fontFamily:C.mono}}
-                interval={Math.max(0,Math.floor(totalDays/8)-1)}/>
-              <YAxis tick={{fill:C.lo,fontSize:8,fontFamily:C.mono}} domain={[0,100]}
-                tickFormatter={v=>`${v}%`} tickCount={3}/>
-              <Tooltip formatter={v=>[`${v}%`,'Done']} contentStyle={tt} cursor={{fill:C.accD}}/>
-              <Bar dataKey="pct" fill={C.acc} radius={[2,2,0,0]} maxBarSize={13}/>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Weekly Progress */}
-        <div style={{background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8,padding:'10px 10px 6px',flex:1,minWidth:158}}>
-          <div style={{fontSize:8,letterSpacing:3,color:C.muted,marginBottom:6,fontFamily:C.mono}}>WEEKLY PROGRESS</div>
-          <ResponsiveContainer width="100%" height={132}>
-            <BarChart data={weeklyData} margin={{top:0,right:2,bottom:0,left:-32}}>
-              <XAxis dataKey="label" tick={{fill:C.lo,fontSize:9,fontFamily:C.mono}}/>
-              <YAxis tick={{fill:C.lo,fontSize:8,fontFamily:C.mono}} domain={[0,100]}
-                tickFormatter={v=>`${v}%`} tickCount={3}/>
-              <Tooltip formatter={v=>[`${v}%`,'Done']} contentStyle={tt} cursor={{fill:C.okD}}/>
-              <Bar dataKey="pct" fill={C.ok} radius={[2,2,0,0]} maxBarSize={40}/>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Stat cards */}
-        <div style={{display:'flex',flexDirection:'column',gap:6,flexShrink:0}}>
-          {[
-            {label:'GOAL',val:totalGoal,color:C.text},
-            {label:'DONE',val:totalDone,color:C.ok},
-            {label:'LEFT',val:totalLeft,color:C.err},
-          ].map(({label,val,color})=>(
-            <div key={label} style={{background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8,
-              padding:'6px 14px',textAlign:'center',minWidth:82}}>
-              <div style={{fontSize:8,letterSpacing:2,color:C.lo,fontFamily:C.mono}}>{label}</div>
-              <div style={{fontFamily:C.mono,fontSize:24,fontWeight:700,color,lineHeight:1.2,marginTop:2}}>{val}</div>
+          {/* Weekly + Stats + Donut row — always horizontal */}
+          <div style={{display:'flex',gap:10,minWidth:0}}>
+            {/* Weekly Progress */}
+            <div style={{background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8,padding:'10px 10px 6px',flex:1,minWidth:0}}>
+              <div style={{fontSize:8,letterSpacing:3,color:C.muted,marginBottom:6,fontFamily:C.mono}}>WEEKLY PROGRESS</div>
+              <div style={{width:'100%',height:132}}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weeklyData} margin={{top:0,right:2,bottom:0,left:-32}}>
+                    <XAxis dataKey="label" tick={{fill:C.lo,fontSize:9,fontFamily:C.mono}}/>
+                    <YAxis tick={{fill:C.lo,fontSize:8,fontFamily:C.mono}} domain={[0,100]}
+                      tickFormatter={v=>`${v}%`} tickCount={3}/>
+                    <Tooltip formatter={v=>[`${v}%`,'Done']} contentStyle={tt} cursor={{fill:C.okD}}/>
+                    <Bar dataKey="pct" fill={C.ok} radius={[2,2,0,0]} maxBarSize={40}/>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-          ))}
-        </div>
 
-        {/* Donut */}
-        <div style={{background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8,padding:'10px 12px',
-          display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flexShrink:0,gap:2}}>
-          <div style={{fontSize:8,letterSpacing:3,color:C.lo,fontFamily:C.mono}}>OVERALL</div>
-          <Donut pct={overallPct}/>
+            {/* Stat cards */}
+            <div style={{display:'flex',flexDirection:'column',gap:6,flexShrink:0}}>
+              {[
+                {label:'GOAL',val:totalGoal,color:C.text},
+                {label:'DONE',val:totalDone,color:C.ok},
+                {label:'LEFT',val:totalLeft,color:C.err},
+              ].map(({label,val,color})=>(
+                <div key={label} style={{background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8,
+                  padding:'6px 14px',textAlign:'center',minWidth:isMobile?64:82}}>
+                  <div style={{fontSize:8,letterSpacing:2,color:C.lo,fontFamily:C.mono}}>{label}</div>
+                  <div style={{fontFamily:C.mono,fontSize:isMobile?18:24,fontWeight:700,color,lineHeight:1.2,marginTop:2}}>{val}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Donut */}
+            {!isMobile && (
+              <div style={{background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8,padding:'10px 12px',
+                display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flexShrink:0,gap:2}}>
+                <div style={{fontSize:8,letterSpacing:3,color:C.lo,fontFamily:C.mono}}>OVERALL</div>
+                <Donut pct={overallPct}/>
+              </div>
+            )}
+          </div>
+
+          {/* Donut on mobile — shown as a small inline strip */}
+          {isMobile && (
+            <div style={{background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8,padding:'8px 12px',
+              display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
+              <div>
+                <div style={{fontSize:8,letterSpacing:3,color:C.lo,fontFamily:C.mono,marginBottom:2}}>OVERALL COMPLETION</div>
+                <div style={{fontFamily:C.mono,fontSize:22,fontWeight:700,color:C.acc}}>{Math.round(overallPct*100)}%</div>
+              </div>
+              <Donut pct={overallPct}/>
+            </div>
+          )}
         </div>
       </div>
 
       {/* ════ BOTTOM: Habits + Analysis ══════════════════════════ */}
-      <div style={{display:'flex',gap:10,alignItems:'flex-start'}}>
+      <div style={{
+        display:'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap:10,
+        alignItems:'flex-start',
+      }}>
 
         {/* Scrollable habits table */}
-        {/* tW: explicitly computed so overflowX actually has content wider than the wrapper */}
         {(() => {
           const dateCols = weeks.reduce((s, wk) => s + wk.length, 0);
           const tW = 240 + dateCols * 34;
           return (
-        <div style={{flex:1,minWidth:0,overflowX:'auto',background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8}}>
-          <div style={{width:tW,minWidth:tW}}>
-          <table style={{borderCollapse:'collapse',width:'100%',fontSize:12}}>
-            <thead>
-              {/* Week groups */}
-              <tr>
-                <th style={{...thSticky(26),textAlign:'left',borderBottom:`1px solid ${C.bd}`,padding:'0 10px'}}>
-                  <span style={{fontSize:8,letterSpacing:3,color:C.lo,fontFamily:C.mono}}>MY HABITS</span>
-                </th>
-                {weeks.map((wk,wi)=>(
-                  <th key={wi} colSpan={wk.length}
-                    style={{height:26,textAlign:'center',color:C.acc,fontSize:10,fontWeight:700,
-                      letterSpacing:0.5,borderBottom:`1px solid ${C.bd}`,borderLeft:`2px solid ${C.bdS}`,
-                      fontFamily:C.mono,padding:0}}>
-                    Week {wi+1}
-                  </th>
-                ))}
-              </tr>
-              {/* Day names */}
-              <tr>
-                <th style={{...thSticky(32),borderBottom:`2px solid ${C.bdS}`}}/>
-                {weeks.map((wk,wi)=>wk.map(({date,dayName},di)=>(
-                  <th key={`${wi}-${di}`}
-                    style={{height:32,minWidth:33,padding:'0 2px',textAlign:'center',
-                      borderBottom:`2px solid ${C.bdS}`,
-                      borderLeft:di===0?`2px solid ${C.bdS}`:`1px solid ${C.bd}`,
-                      background:isToday(date)?C.accD:'transparent'}}>
-                    <div style={{fontSize:8,color:isToday(date)?C.acc:C.lo,fontFamily:C.mono}}>{dayName}</div>
-                    <div style={{fontSize:10,fontWeight:isToday(date)?700:500,
-                      color:isToday(date)?C.acc:C.text,fontFamily:C.mono}}>{date}</div>
-                  </th>
-                )))}
-              </tr>
-            </thead>
-            <tbody>
-              {habits.length===0 ? (
-                <tr>
-                  <td colSpan={999} style={{padding:'38px 24px',textAlign:'center',color:C.muted,fontSize:13}}>
-                    No habits yet —{' '}
-                    <button onClick={openAdd}
-                      style={{background:'none',border:'none',cursor:'pointer',color:C.acc,
-                        fontWeight:600,fontFamily:C.body,fontSize:13}}>
-                      + Add your first habit
-                    </button>
-                  </td>
-                </tr>
-              ) : stats.map((h,hi)=>{
-                const rowBg    = hi%2===0 ? C.s1 : C.s2;
-                const isPend   = pendingDelete === h.id;
-                return (
-                  <tr key={h.id}>
-                    {/* Sticky habit name cell */}
-                    <td style={{position:'sticky',left:0,zIndex:2,background:rowBg,
-                      height:ROW_H,width:240,minWidth:240,
-                      padding:'0 6px 0 10px',borderBottom:`1px solid ${C.bd}`}}>
-                      <div style={{display:'flex',alignItems:'center',gap:6}}>
-                        <span style={{fontSize:15,flexShrink:0}}>{h.emoji}</span>
-                        <span style={{flex:1,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',
-                          textOverflow:'ellipsis',fontSize:12,maxWidth:136}}>{h.name}</span>
-                        <div style={{display:'flex',gap:2,alignItems:'center',flexShrink:0}}>
-                          {isPend ? (
-                            <>
-                              <button onClick={()=>doDelete(h.id)}
-                                style={{background:C.errD,border:`1px solid ${C.err}44`,color:C.err,
-                                  cursor:'pointer',padding:'2px 6px',borderRadius:3,
-                                  fontSize:9,fontWeight:700,letterSpacing:0.5,fontFamily:C.mono}}>
-                                DEL
-                              </button>
-                              <button onClick={()=>setPendingDelete(null)}
-                                style={{background:'none',border:'none',cursor:'pointer',
-                                  color:C.lo,fontSize:15,fontWeight:700,padding:'0 3px',lineHeight:1}}>
-                                ×
-                              </button>
-                            </>
-                          ):(
-                            <>
-                              <button onClick={()=>openEdit(h)} title="Edit"
-                                style={{background:'none',border:'none',cursor:'pointer',color:C.lo,
-                                  fontSize:12,padding:'2px 4px',borderRadius:3,lineHeight:1,fontFamily:C.mono}}
-                                onMouseEnter={e=>e.currentTarget.style.color=C.acc}
-                                onMouseLeave={e=>e.currentTarget.style.color=C.lo}>
-                                ✏
-                              </button>
-                              <button onClick={()=>setPendingDelete(h.id)} title="Delete"
-                                style={{background:'none',border:'none',cursor:'pointer',color:C.lo,
-                                  fontSize:15,padding:'2px 4px',borderRadius:3,lineHeight:1,fontWeight:700}}
-                                onMouseEnter={e=>e.currentTarget.style.color=C.err}
-                                onMouseLeave={e=>e.currentTarget.style.color=C.lo}>
-                                ×
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Checkbox cells */}
-                    {weeks.map((wk,wi)=>wk.map(({date},di)=>{
-                      const chk     = !!checks[`${h.id}-${date}`];
-                      const todayBg = isToday(date) ? (chk ? C.okD : C.accD) : 'transparent';
-                      return (
-                        <td key={`${wi}-${di}`}
-                          style={{height:ROW_H,textAlign:'center',
-                            borderBottom:`1px solid ${C.bd}`,
+            <div style={{flex:1,minWidth:0,width:'100%',overflowX:'auto',background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8}}>
+              <div style={{width:tW,minWidth:tW}}>
+                <table style={{borderCollapse:'collapse',width:'100%',fontSize:12}}>
+                  <thead>
+                    <tr>
+                      <th style={{...thSticky(26),textAlign:'left',borderBottom:`1px solid ${C.bd}`,padding:'0 10px'}}>
+                        <span style={{fontSize:8,letterSpacing:3,color:C.lo,fontFamily:C.mono}}>MY HABITS</span>
+                      </th>
+                      {weeks.map((wk,wi)=>(
+                        <th key={wi} colSpan={wk.length}
+                          style={{height:26,textAlign:'center',color:C.acc,fontSize:10,fontWeight:700,
+                            letterSpacing:0.5,borderBottom:`1px solid ${C.bd}`,borderLeft:`2px solid ${C.bdS}`,
+                            fontFamily:C.mono,padding:0}}>
+                          Week {wi+1}
+                        </th>
+                      ))}
+                    </tr>
+                    <tr>
+                      <th style={{...thSticky(32),borderBottom:`2px solid ${C.bdS}`}}/>
+                      {weeks.map((wk,wi)=>wk.map(({date,dayName},di)=>(
+                        <th key={`${wi}-${di}`}
+                          style={{height:32,minWidth:33,padding:'0 2px',textAlign:'center',
+                            borderBottom:`2px solid ${C.bdS}`,
                             borderLeft:di===0?`2px solid ${C.bdS}`:`1px solid ${C.bd}`,
-                            background:todayBg}}>
-                          <input type="checkbox" checked={chk} onChange={()=>toggle(h.id,date)}
-                            style={{width:14,height:14}}/>
+                            background:isToday(date)?C.accD:'transparent'}}>
+                          <div style={{fontSize:8,color:isToday(date)?C.acc:C.lo,fontFamily:C.mono}}>{dayName}</div>
+                          <div style={{fontSize:10,fontWeight:isToday(date)?700:500,
+                            color:isToday(date)?C.acc:C.text,fontFamily:C.mono}}>{date}</div>
+                        </th>
+                      )))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {habits.length===0 ? (
+                      <tr>
+                        <td colSpan={999} style={{padding:'38px 24px',textAlign:'center',color:C.muted,fontSize:13}}>
+                          No habits yet —{' '}
+                          <button onClick={openAdd}
+                            style={{background:'none',border:'none',cursor:'pointer',color:C.acc,
+                              fontWeight:600,fontFamily:C.body,fontSize:13}}>
+                            + Add your first habit
+                          </button>
                         </td>
+                      </tr>
+                    ) : stats.map((h,hi)=>{
+                      const rowBg  = hi%2===0 ? C.s1 : C.s2;
+                      const isPend = pendingDelete === h.id;
+                      return (
+                        <tr key={h.id}>
+                          <td style={{position:'sticky',left:0,zIndex:2,background:rowBg,
+                            height:ROW_H,width:240,minWidth:240,
+                            padding:'0 6px 0 10px',borderBottom:`1px solid ${C.bd}`}}>
+                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                              <span style={{fontSize:15,flexShrink:0}}>{h.emoji}</span>
+                              <span style={{flex:1,fontWeight:500,whiteSpace:'nowrap',overflow:'hidden',
+                                textOverflow:'ellipsis',fontSize:12,maxWidth:136}}>{h.name}</span>
+                              <div style={{display:'flex',gap:2,alignItems:'center',flexShrink:0}}>
+                                {isPend ? (
+                                  <>
+                                    <button onClick={()=>doDelete(h.id)}
+                                      style={{background:C.errD,border:`1px solid ${C.err}44`,color:C.err,
+                                        cursor:'pointer',padding:'2px 6px',borderRadius:3,
+                                        fontSize:9,fontWeight:700,letterSpacing:0.5,fontFamily:C.mono}}>
+                                      DEL
+                                    </button>
+                                    <button onClick={()=>setPendingDelete(null)}
+                                      style={{background:'none',border:'none',cursor:'pointer',
+                                        color:C.lo,fontSize:15,fontWeight:700,padding:'0 3px',lineHeight:1}}>
+                                      ×
+                                    </button>
+                                  </>
+                                ):(
+                                  <>
+                                    <button onClick={()=>openEdit(h)} title="Edit"
+                                      style={{background:'none',border:'none',cursor:'pointer',color:C.lo,
+                                        fontSize:12,padding:'2px 4px',borderRadius:3,lineHeight:1,fontFamily:C.mono}}
+                                      onMouseEnter={e=>e.currentTarget.style.color=C.acc}
+                                      onMouseLeave={e=>e.currentTarget.style.color=C.lo}>
+                                      ✏
+                                    </button>
+                                    <button onClick={()=>setPendingDelete(h.id)} title="Delete"
+                                      style={{background:'none',border:'none',cursor:'pointer',color:C.lo,
+                                        fontSize:15,padding:'2px 4px',borderRadius:3,lineHeight:1,fontWeight:700}}
+                                      onMouseEnter={e=>e.currentTarget.style.color=C.err}
+                                      onMouseLeave={e=>e.currentTarget.style.color=C.lo}>
+                                      ×
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          {weeks.map((wk,wi)=>wk.map(({date},di)=>{
+                            const chk     = !!checks[`${h.id}-${date}`];
+                            const todayBg = isToday(date) ? (chk ? C.okD : C.accD) : 'transparent';
+                            return (
+                              <td key={`${wi}-${di}`}
+                                style={{height:ROW_H,textAlign:'center',
+                                  borderBottom:`1px solid ${C.bd}`,
+                                  borderLeft:di===0?`2px solid ${C.bdS}`:`1px solid ${C.bd}`,
+                                  background:todayBg}}>
+                                <input type="checkbox" checked={chk} onChange={()=>toggle(h.id,date)}
+                                  style={{width:14,height:14}}/>
+                              </td>
+                            );
+                          }))}
+                        </tr>
                       );
-                    }))}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          </div>
-        </div>
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           );
         })()}
 
-        {/* Analysis panel — rows align with habits table via ROW_H + THEAD_H */}
-        <div style={{flexShrink:0,width:318,background:C.s1,border:`1px solid ${C.bd}`,borderRadius:8,overflow:'hidden'}}>
-          {/* Header: same total height as habits table thead (26+32=58px) */}
+        {/* Analysis panel */}
+        <div style={{
+          flexShrink:0,
+          width: isMobile ? '100%' : 318,
+          background:C.s1,
+          border:`1px solid ${C.bd}`,
+          borderRadius:8,
+          overflow:'hidden',
+        }}>
           <div style={{height:THEAD_H,display:'flex',flexDirection:'column',justifyContent:'flex-end',
             borderBottom:`2px solid ${C.bdS}`,background:C.s2}}>
             <div style={{textAlign:'center',paddingBottom:3,fontFamily:C.mono,
@@ -470,7 +523,6 @@ export default function HabitTracker() {
             </div>
           </div>
 
-          {/* Analysis rows */}
           {habits.length===0 ? (
             <div style={{height:ROW_H*3,display:'flex',alignItems:'center',
               justifyContent:'center',color:C.lo,fontSize:12}}>
@@ -498,10 +550,10 @@ export default function HabitTracker() {
       {/* ════ MODAL ══════════════════════════════════════════════ */}
       {modal && (
         <div style={{position:'fixed',inset:0,background:'rgba(10,10,18,0.88)',
-          display:'flex',alignItems:'center',justifyContent:'center',zIndex:300}}
+          display:'flex',alignItems:'center',justifyContent:'center',zIndex:300,padding:16}}
           onClick={e=>e.target===e.currentTarget&&closeModal()}>
           <div style={{background:C.s1,border:`1px solid ${C.bd}`,borderTop:`2px solid ${C.acc}`,
-            borderRadius:12,padding:28,minWidth:360,
+            borderRadius:12,padding:28,width:'100%',maxWidth:400,
             boxShadow:'0 32px 64px rgba(0,0,0,0.7)'}}>
             <div style={{fontFamily:C.disp,fontSize:13,fontWeight:800,color:C.acc,
               letterSpacing:3,marginBottom:22}}>
