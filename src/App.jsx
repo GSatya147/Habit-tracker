@@ -42,7 +42,7 @@ const DEFAULTS = [
   { id:'h5', name:'No social media 1H',   emoji:'📵' },
 ];
 
-// ── Storage ─────────────────────────
+// ── Storage 
 const db = {
   get: async (key) => {
     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
