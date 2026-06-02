@@ -3,14 +3,14 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recha
 
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap');
     *{box-sizing:border-box;margin:0;padding:0;}
-    input[type="checkbox"]{accent-color:#C8622A;cursor:pointer;}
-    select option{background:#FAF8F5;color:#1C1F2E;}
+    input[type="checkbox"]{accent-color:#f0a84e;cursor:pointer;}
+    select option{background:#1a1d26;color:#e6ecf5;}
     ::-webkit-scrollbar{width:5px;height:5px;}
     ::-webkit-scrollbar-track{background:transparent;}
-    ::-webkit-scrollbar-thumb{background:#D9CFC7;border-radius:3px;}
-    ::-webkit-scrollbar-thumb:hover{background:#C8622A55;}
+    ::-webkit-scrollbar-thumb{background:#2e3350;border-radius:3px;}
+    ::-webkit-scrollbar-thumb:hover{background:#f0a84e55;}
   `}</style>
 );
 
