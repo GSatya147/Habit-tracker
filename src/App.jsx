@@ -15,16 +15,16 @@ const Fonts = () => (
 );
 
 const C = {
-  bg: '#F0EBE3', s1: '#F7F3EE', s2: '#EDE6DC', s3: '#E4DCD0',
-  bd: '#E2D9CF', bdS: '#C8BAA8',
-  acc: '#C8622A', accD: 'rgba(200,98,42,0.10)',
-  ok: '#2D8653', okD: 'rgba(45,134,83,0.10)',
-  err: '#C0392B', errD: 'rgba(192,57,43,0.10)',
-  warn: '#B7860B',
-  text: '#1C1F2E', muted: '#7A6E65', lo: '#B0A49A',
-  mono: '"DM Mono",monospace',
-  body: '"Plus Jakarta Sans",system-ui,sans-serif',
-  disp: '"Playfair Display",Georgia,serif',
+  bg: '#111318', s1: '#1a1d26', s2: '#22263a', s3: '#2a2f48',
+  bd: '#2e3350', bdS: '#3d4268',
+  acc: '#f0a84e', accD: 'rgba(240,168,78,0.13)',
+  ok: '#4cc98a', okD: 'rgba(76,201,138,0.13)',
+  err: '#f26868', errD: 'rgba(242,104,104,0.13)',
+  warn: '#e8c84a',
+  text: '#e6ecf5', muted: '#7a80a0', lo: '#4a5070',
+  mono: '"JetBrains Mono",monospace',
+  body: '"DM Sans",system-ui,sans-serif',
+  disp: '"Syne",system-ui,sans-serif',
 };
 
 const MONTHS = ['January','February','March','April','May','June',
