@@ -3,28 +3,28 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recha
 
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap');
     *{box-sizing:border-box;margin:0;padding:0;}
-    input[type="checkbox"]{accent-color:#f0a84e;cursor:pointer;}
-    select option{background:#1a1d26;color:#e6ecf5;}
+    input[type="checkbox"]{accent-color:#C8622A;cursor:pointer;}
+    select option{background:#FAF8F5;color:#1C1F2E;}
     ::-webkit-scrollbar{width:5px;height:5px;}
     ::-webkit-scrollbar-track{background:transparent;}
-    ::-webkit-scrollbar-thumb{background:#2e3350;border-radius:3px;}
-    ::-webkit-scrollbar-thumb:hover{background:#f0a84e55;}
+    ::-webkit-scrollbar-thumb{background:#D9CFC7;border-radius:3px;}
+    ::-webkit-scrollbar-thumb:hover{background:#C8622A55;}
   `}</style>
 );
 
 const C = {
-  bg: '#111318', s1: '#1a1d26', s2: '#22263a', s3: '#2a2f48',
-  bd: '#2e3350', bdS: '#3d4268',
-  acc: '#f0a84e', accD: 'rgba(240,168,78,0.13)',
-  ok: '#4cc98a', okD: 'rgba(76,201,138,0.13)',
-  err: '#f26868', errD: 'rgba(242,104,104,0.13)',
-  warn: '#e8c84a',
-  text: '#e6ecf5', muted: '#7a80a0', lo: '#4a5070',
-  mono: '"JetBrains Mono",monospace',
-  body: '"DM Sans",system-ui,sans-serif',
-  disp: '"Syne",system-ui,sans-serif',
+  bg: '#F0EBE3', s1: '#F7F3EE', s2: '#EDE6DC', s3: '#E4DCD0',
+  bd: '#E2D9CF', bdS: '#C8BAA8',
+  acc: '#C8622A', accD: 'rgba(200,98,42,0.10)',
+  ok: '#2D8653', okD: 'rgba(45,134,83,0.10)',
+  err: '#C0392B', errD: 'rgba(192,57,43,0.10)',
+  warn: '#B7860B',
+  text: '#1C1F2E', muted: '#7A6E65', lo: '#B0A49A',
+  mono: '"DM Mono",monospace',
+  body: '"Plus Jakarta Sans",system-ui,sans-serif',
+  disp: '"Playfair Display",Georgia,serif',
 };
 
 const MONTHS = ['January','February','March','April','May','June',
@@ -42,7 +42,7 @@ const DEFAULTS = [
   { id:'h5', name:'No social media 1H',   emoji:'📵' },
 ];
 
-// ── Storage ───────────────────────────────────────────────────────
+// ── Storage ─────────────────────────
 const db = {
   get: async (key) => {
     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
