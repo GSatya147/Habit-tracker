@@ -79,7 +79,7 @@ const buildWeeks  = (y, m) => {
   return weeks;
 };
 
-// ── Sub-components ────────────────────────────────────────────────
+// Sub-components
 function Donut({ pct }) {
   const r = 38, cx = 50, cy = 50;
   const circ   = 2 * Math.PI * r;
