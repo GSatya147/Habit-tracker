@@ -109,7 +109,7 @@ function ProgBar({ pct }) {
   );
 }
 
-// ── Main ──────────────────────────────────────────────────────────
+// Main 
 export default function HabitTracker() {
   const now = new Date();
   const isMobile = useIsMobile();
