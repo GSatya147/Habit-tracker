@@ -233,7 +233,7 @@ export default function HabitTracker() {
     <div style={{fontFamily:C.body,background:C.bg,minHeight:'100vh',color:C.text,padding:isMobile?10:16}}>
       <Fonts/>
 
-      {/* ════ TOP ROW ════════════════════════════════════════════ */}
+      {/* TOP ROW */}
       <div style={{
         display:'flex',
         flexDirection: isMobile ? 'column' : 'row',
