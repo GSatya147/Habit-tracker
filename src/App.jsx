@@ -125,7 +125,7 @@ export default function HabitTracker() {
   const [mEmoji,        setMEmoji]        = useState('✅');
   const [pendingDelete, setPendingDelete] = useState(null);
 
-  // ── Bootstrap ─────────────────────────────────────────────────
+  // Bootstrap
   useEffect(() => {
     (async () => {
       const h = await db.get('habits');
