@@ -54,7 +54,7 @@ const db = {
   },
 };
 
-// ── Responsive hook ───────────────────────────────────────────────
+// ── Responsive hook 
 const useIsMobile = () => {
   const [mobile, setMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
