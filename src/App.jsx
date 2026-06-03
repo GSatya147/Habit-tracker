@@ -42,7 +42,7 @@ const DEFAULTS = [
   { id:'h5', name:'No social media 1H',   emoji:'📵' },
 ];
 
-// ── Storage 
+// Storage 
 const db = {
   get: async (key) => {
     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
@@ -54,7 +54,7 @@ const db = {
   },
 };
 
-// ── Responsive hook 
+// Responsive hook 
 const useIsMobile = () => {
   const [mobile, setMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -65,7 +65,7 @@ const useIsMobile = () => {
   return mobile;
 };
 
-// ── Calendar utils ────────────────────────────────────────────────
+// Calendar utils
 const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
 const buildWeeks  = (y, m) => {
   const total = daysInMonth(y, m);
