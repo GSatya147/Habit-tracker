@@ -547,7 +547,7 @@ export default function HabitTracker() {
         </div>
       </div>
 
-      {/* ════ MODAL ══════════════════════════════════════════════ */}
+      {/* MODAL */}
       {modal && (
         <div style={{position:'fixed',inset:0,background:'rgba(10,10,18,0.88)',
           display:'flex',alignItems:'center',justifyContent:'center',zIndex:300,padding:16}}
