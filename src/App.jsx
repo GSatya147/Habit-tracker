@@ -65,7 +65,7 @@ const useIsMobile = () => {
   return mobile;
 };
 
-// Calendar utils
+// Calendar utils 
 const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
 const buildWeeks  = (y, m) => {
   const total = daysInMonth(y, m);
@@ -79,7 +79,7 @@ const buildWeeks  = (y, m) => {
   return weeks;
 };
 
-// Sub-components
+// Sub-components 
 function Donut({ pct }) {
   const r = 38, cx = 50, cy = 50;
   const circ   = 2 * Math.PI * r;
@@ -370,7 +370,7 @@ export default function HabitTracker() {
         </div>
       </div>
 
-      {/* ════ BOTTOM: Habits + Analysis ══════════════════════════ */}
+      {/* BOTTOM: Habits + Analysis */}
       <div style={{
         display:'flex',
         flexDirection: isMobile ? 'column' : 'row',
